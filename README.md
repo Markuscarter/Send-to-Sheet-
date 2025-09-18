@@ -69,3 +69,46 @@ function doGet(e) {
     return ContentService.createTextOutput("ERROR: " + error.toString());
   }
 }
+## Deploy the Web App:
+
+Click Deploy → New deployment → Web app
+
+Execute as: Me
+
+Who has access: Anyone with the link (or your domain)
+
+Click Deploy and copy the Web App URL (ends with /exec).
+
+## Security note: “Anyone with the link” is easiest. If you need stricter control, add a shared secret (e.g., a key= param) and verify it in code before writing to the sheet.
+
+## Install the extension (unpacked)
+
+Download/clone this repo to your computer.
+
+Open chrome://extensions → enable Developer mode (top-right).
+
+Click Load unpacked → select the project folder.
+
+Open the extension’s Options page and paste your Apps Script /exec URL.
+
+## Usage
+
+Right-click a link → Send link to Google Sheet
+
+Right-click selected text → Send selection to Google Sheet
+
+Right-click page → Send page URL to Google Sheet
+
+Each action appends a row in your sheet: A = date, B = hyperlink.
+
+## Files
+
+manifest.json — Chrome extension manifest (v3)
+
+background.js — Context-menu registration + webhook call
+
+options.html — Simple UI to save your webhook URL (in chrome.storage.sync)
+
+icon128.png — Extension icon
+
+Customization
