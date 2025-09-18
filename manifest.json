@@ -1,0 +1,11 @@
+{
+  "name": "Send to Google Sheet",
+  "description": "Right-click to send a link/selection/page URL to a Google Sheet via webhook.",
+  "version": "1.0.2",
+  "manifest_version": 3,
+  "permissions": ["contextMenus", "storage", "notifications"],
+  "host_permissions": ["https://script.google.com/*"],
+  "options_page": "options.html",
+  "background": { "service_worker": "background.js" },
+  "icons": { "128": "icon128.png" }
+}

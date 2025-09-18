@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Send to Sheet — Options</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 16px; }
+      #toast { margin-top: 8px; font-size: 12px; opacity: 0.9; }
+      #toast.ok { color: #0a0; }
+      #toast.err { color: #a00; }
+      input { width: 100%; }
+      .row { margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h3>Webhook URL</h3>
+    <p>Paste your Google Apps Script Web App URL (must end with <code>/exec</code>):</p>
+    <input id="wh" placeholder="https://script.google.com/macros/s/XXX/exec" />
+    <div class="row">
+      <button id="save">Save</button>
+      <button id="test">Test</button>
+    </div>
+    <div id="toast"></div>
+    <script src="options.js"></script>
+  </body>
+</html>

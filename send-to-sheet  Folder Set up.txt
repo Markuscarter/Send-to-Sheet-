@@ -1,0 +1,6 @@
+send-to-sheet/ Folder Set up 
+│
+├── manifest.json
+├── background.js
+├── options.html   (optional but recommended)
+├── icon128.png    (optional, 128×128 image)

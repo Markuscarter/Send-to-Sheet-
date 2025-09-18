@@ -1,0 +1,13 @@
+Steps to use
+
+Build this folder in Google Drive.
+
+Right-click → Download → unzip (if Google zips it).
+
+On your Chromebook, go to chrome://extensions.
+
+Enable Developer mode (top right).
+
+Click Load unpacked → pick the send-to-sheet folder.
+
+Go to the extension’s Options page and paste your /exec URL from Apps Script.
