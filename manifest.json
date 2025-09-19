@@ -1,11 +1,44 @@
 {
   "name": "Send to Google Sheet",
   "description": "Right-click to send a link/selection/page URL to a Google Sheet via webhook.",
-  "version": "1.0.2",
+  "version": "1.2.0",
   "manifest_version": 3,
-  "permissions": ["contextMenus", "storage", "notifications"],
+  "permissions": ["contextMenus", "storage", "notifications", "activeTab", "scripting", "tabs"],
   "host_permissions": ["https://script.google.com/*"],
   "options_page": "options.html",
   "background": { "service_worker": "background.js" },
+  "action": {
+    "default_icon": "icon128.png",
+    "default_title": "Click to save current URL | Cases today: 0"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icon128.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "commands": {
+    "save-selection": {
+      "suggested_key": {
+        "default": "Ctrl+I",
+        "mac": "Command+I"
+      },
+      "description": "Save selected text or link to Google Sheet"
+    },
+    "save-current-url": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+I",
+        "mac": "Command+Shift+I"
+      },
+      "description": "Save current page URL to Google Sheet"
+    }
+  },
   "icons": { "128": "icon128.png" }
 }
