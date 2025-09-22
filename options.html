@@ -11,19 +11,21 @@
         margin: 0 auto;
       }
       h3 { color: #333; }
-      #toast { 
+      .status { 
         margin-top: 8px; 
-        font-size: 13px; 
         padding: 8px;
         border-radius: 4px;
+        display: none;
       }
-      #toast.ok { 
+      .status.success { 
         background: #e8f5e9;
         color: #2e7d32;
+        display: block;
       }
-      #toast.err { 
+      .status.error { 
         background: #ffebee;
         color: #c62828;
+        display: block;
       }
       input { 
         width: 100%;
@@ -31,6 +33,7 @@
         font-size: 14px;
         border: 1px solid #ddd;
         border-radius: 4px;
+        margin: 8px 0;
       }
       button {
         padding: 10px 20px;
@@ -40,88 +43,88 @@
         cursor: pointer;
         margin-right: 10px;
       }
-      #save {
+      .primary {
         background: #4285f4;
         color: white;
       }
-      #save:hover {
+      .primary:hover {
         background: #357ae8;
       }
-      #test {
+      .secondary {
         background: #f5f5f5;
       }
-      #test:hover {
+      .secondary:hover {
         background: #e0e0e0;
       }
-      .row { margin-top: 12px; }
+      .auth-status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        background: #f5f5f5;
+      }
+      .auth-status.connected {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .feature-toggle {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f0f0f0;
+        border-radius: 8px;
+      }
       .stats {
         margin-top: 24px;
         padding: 20px;
         background: #f8f9fa;
         border-radius: 8px;
       }
-      .shortcuts {
-        margin-top: 20px;
-        padding: 20px;
-        background: #e3f2fd;
-        border-radius: 8px;
-      }
-      .shortcuts h4 { margin-top: 0; color: #1976d2; }
       kbd {
         background: white;
         border: 1px solid #ccc;
         padding: 3px 8px;
         border-radius: 4px;
-        font-family: 'Courier New', monospace;
+        font-family: monospace;
         font-size: 12px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      }
-      ul { line-height: 1.8; }
-      .stat-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 5px 0;
-        border-bottom: 1px solid #e0e0e0;
       }
     </style>
   </head>
   <body>
-    <h2>Send to Google Sheet</h2>
+    <h2>Send to Google Sheet - Settings</h2>
     
-    <h3>Webhook Configuration</h3>
-    <p>Enter your Google Apps Script Web App URL:</p>
-    <input id="wh" placeholder="https://script.google.com/macros/s/XXX/exec" />
-    <div class="row">
-      <button id="save">Save Settings</button>
-      <button id="test">Send Test</button>
+    <div class="auth-status" id="authStatus">
+      Checking authentication status...
     </div>
-    <div id="toast"></div>
     
-    <div class="shortcuts">
-      <h4>All Ways to Save</h4>
-      <ul>
-        <li><strong>Right-click</strong> any link/text - "Send to Google Sheet"</li>
-        <li><strong>Click extension icon</strong> - saves current page URL</li>
-        <li><kbd>Ctrl</kbd>+<kbd>I</kbd> - save selected text or link</li>
-        <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd> - save current page URL</li>
-        <li><strong>Hover</strong> over long links - click the save button</li>
-      </ul>
-      <small>Mac users: Use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd></small>
+    <h3>Google Sheet Configuration</h3>
+    <p>Paste your Google Sheet URL:</p>
+    <input id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/xxxxx/edit" />
+    
+    <p>Tab name (optional, defaults to "Production Tracker"):</p>
+    <input id="tabName" placeholder="Production Tracker" />
+    
+    <div>
+      <button class="primary" id="save">Save Settings</button>
+      <button class="secondary" id="auth">Authenticate</button>
+      <button class="secondary" id="test">Test Connection</button>
     </div>
-    <div class="feature-toggle" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
-  <h4>Floating Button</h4>
-  <label style="display: flex; align-items: center; cursor: pointer;">
-    <input type="checkbox" id="floatingToggle" style="margin-right: 10px;">
-    <span>Enable floating save button on all pages</span>
-  </label>
-  <small style="display: block; margin-top: 8px; color: #666;">
-    When enabled, shows a draggable button on all pages. Right-click it for options.
-  </small>
-</div>
-      
+    
+    <div class="status" id="status"></div>
+    
+    <div class="feature-toggle">
+      <h4>Floating Button</h4>
+      <label style="display: flex; align-items: center; cursor: pointer;">
+        <input type="checkbox" id="floatingToggle" style="margin-right: 10px;">
+        <span>Enable floating save button on all pages</span>
+      </label>
+      <small style="display: block; margin-top: 8px; color: #666;">
+        When enabled, shows a draggable button on all pages.
+      </small>
+    </div>
+    
     <div class="stats">
       <h4>Statistics</h4>
       <div id="stats-content">Loading...</div>
+      <button class="secondary" id="syncNow" style="margin-top: 10px;">Sync Now</button>
     </div>
     
     <script src="options.js"></script>

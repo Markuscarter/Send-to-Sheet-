@@ -1,123 +1,116 @@
-const wh = document.getElementById("wh");
-const toast = document.getElementById("toast");
-const saveBtn = document.getElementById("save");
-const testBtn = document.getElementById("test");
-
-function show(msg, ok = true) {
-  toast.textContent = msg;
-  toast.className = ok ? "ok" : "err";
-  toast.style.display = "block";
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 3000);
-}
-
-function valid(url) {
-  return typeof url === "string" &&
-         url.startsWith("https://script.google.com/") &&
-         url.includes("/exec");
-}
-
-function getStorage(keys, cb) {
-  chrome.storage.sync.get(keys, (syncVals) => {
-    if (chrome.runtime.lastError || !syncVals.webhookUrl) {
-      chrome.storage.local.get(keys, (localVals) => cb(localVals || {}));
-    } else {
-      cb(syncVals);
-    }
-  });
-}
-
-function setStorage(obj, cb) {
-  chrome.storage.sync.set(obj, () => {
-    chrome.storage.local.set(obj, cb);
-  });
-}
-
-// Load webhook URL
-getStorage(["webhookUrl"], ({ webhookUrl }) => {
-  if (webhookUrl) wh.value = webhookUrl;
-});
-
-// Load and display stats
-async function loadStats() {
-  const allData = await chrome.storage.local.get(null);
-  const today = new Date().toLocaleDateString('en-US');
-  const todayCount = allData[today] || 0;
-  
-  let statsHTML = `<div class="stat-row"><strong>Today (${today}):</strong> <span>${todayCount} cases</span></div>`;
-  
-  // Calculate weekly total
-  let weekTotal = 0;
-  const last7Days = [];
-  
-  for (let i = 0; i < 7; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateKey = date.toLocaleDateString('en-US');
-    const count = allData[dateKey] || 0;
-    weekTotal += count;
-    if (count > 0 && i > 0) {
-      last7Days.push(`<div class="stat-row"><span>${dateKey}:</span> <span>${count} cases</span></div>`);
-    }
-  }
-  
-  statsHTML += `<div class="stat-row"><strong>Last 7 days total:</strong> <span>${weekTotal} cases</span></div>`;
-  
-  if (last7Days.length > 0) {
-    statsHTML += '<div style="margin-top: 10px; font-size: 13px; opacity: 0.8;">';
-    statsHTML += last7Days.join('');
-    statsHTML += '</div>';
-  }
-  
-  document.getElementById('stats-content').innerHTML = statsHTML;
-}
-
-loadStats();
-// Refresh stats every 30 seconds
-setInterval(loadStats, 30000);
-
-saveBtn.addEventListener("click", () => {
-  const url = (wh.value || "").trim();
-  if (!valid(url)) {
-    show("Invalid URL. Must be a Google Apps Script /exec URL.", false);
-    return;
-  }
-  setStorage({ webhookUrl: url }, () => {
-    show("Settings saved successfully!", true);
-  });
-});
-
-testBtn.addEventListener("click", async () => {
-  const url = (wh.value || "").trim();
-  if (!valid(url)) {
-    show("Please enter a valid webhook URL first.", false);
-    return;
-  }
-  
-  show("Sending test...", true);
-  
+// Check auth status
+async function checkAuthStatus() {
   try {
-    await fetch(url + "?data=" + encodeURIComponent("Test from extension: " + new Date().toLocaleString()), 
-               { method: "GET", mode: "no-cors" });
-    show("Test sent! Check your Google Sheet.", true);
-    setTimeout(loadStats, 1000);
-  } catch (e) {
-    show("Test failed: " + e.message, false);
+    await new Promise((resolve, reject) => {
+      chrome.identity.getAuthToken({ interactive: false }, (token) => {
+        if (chrome.runtime.lastError || !token) {
+          reject(new Error('Not authenticated'));
+        } else {
+          resolve(token);
+        }
+      });
+    });
+    
+    document.getElementById('authStatus').textContent = 'Connected to Google Sheets';
+    document.getElementById('authStatus').className = 'auth-status connected';
+  } catch {
+    document.getElementById('authStatus').textContent = 'Not authenticated - click Authenticate to connect';
+    document.getElementById('authStatus').className = 'auth-status';
   }
+}
+
+// Load settings
+chrome.storage.sync.get(['sheetUrl', 'tabName', 'floatingButtonEnabled'], (data) => {
+  if (data.sheetUrl) document.getElementById('sheetUrl').value = data.sheetUrl;
+  if (data.tabName) document.getElementById('tabName').value = data.tabName;
+  document.getElementById('floatingToggle').checked = data.floatingButtonEnabled || false;
 });
 
-// Show/hide toast initially
-toast.style.display = "none";
-
-// Load floating button setting
-chrome.storage.sync.get(['floatingButtonEnabled'], ({ floatingButtonEnabled }) => {
-  document.getElementById('floatingToggle').checked = floatingButtonEnabled || false;
-});
-
-// Save floating button setting
-document.getElementById('floatingToggle').addEventListener('change', (e) => {
-  chrome.storage.sync.set({ floatingButtonEnabled: e.target.checked }, () => {
-    show(e.target.checked ? 'Floating button enabled' : 'Floating button disabled', true);
+// Save settings
+document.getElementById('save').addEventListener('click', () => {
+  const sheetUrl = document.getElementById('sheetUrl').value.trim();
+  const tabName = document.getElementById('tabName').value.trim() || 'Production Tracker';
+  
+  if (!sheetUrl) {
+    showStatus('Please enter a Google Sheet URL', false);
+    return;
+  }
+  
+  chrome.storage.sync.set({ sheetUrl, tabName }, () => {
+    showStatus('Settings saved successfully!', true);
+    chrome.runtime.sendMessage({ action: 'updateBadge' });
   });
 });
+
+// Authenticate
+document.getElementById('auth').addEventListener('click', () => {
+  chrome.identity.getAuthToken({ interactive: true }, (token) => {
+    if (chrome.runtime.lastError) {
+      showStatus('Authentication failed: ' + chrome.runtime.lastError.message, false);
+    } else {
+      showStatus('Authentication successful!', true);
+      checkAuthStatus();
+    }
+  });
+});
+
+// Test connection
+document.getElementById('test').addEventListener('click', async () => {
+  showStatus('Testing connection...', true);
+  
+  chrome.runtime.sendMessage({ 
+    action: 'saveToSheet', 
+    url: 'Test from options: ' + new Date().toLocaleString() 
+  }, (response) => {
+    if (response) {
+      showStatus('Test successful! Check your sheet.', true);
+      loadStats();
+    } else {
+      showStatus('Test failed. Check your settings and authentication.', false);
+    }
+  });
+});
+
+// Floating button toggle
+document.getElementById('floatingToggle').addEventListener('change', (e) => {
+  chrome.storage.sync.set({ floatingButtonEnabled: e.target.checked });
+});
+
+// Sync now
+document.getElementById('syncNow').addEventListener('click', () => {
+  chrome.runtime.sendMessage({ action: 'syncCounter' });
+  setTimeout(loadStats, 1000);
+});
+
+// Load stats
+async function loadStats() {
+  const data = await chrome.storage.local.get(null);
+  const today = new Date().toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: '2-digit'
+  });
+  
+  const todayCount = data[today] || 0;
+  let html = `<p><strong>Today (${today}):</strong> ${todayCount} cases</p>`;
+  
+  const pending = data.pendingQueue?.length || 0;
+  if (pending > 0) {
+    html += `<p><strong>Pending uploads:</strong> ${pending}</p>`;
+  }
+  
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+function showStatus(message, success) {
+  const status = document.getElementById('status');
+  status.textContent = message;
+  status.className = success ? 'status success' : 'status error';
+  setTimeout(() => {
+    status.className = 'status';
+  }, 5000);
+}
+
+// Initial load
+checkAuthStatus();
+loadStats();
