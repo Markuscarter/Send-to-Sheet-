@@ -1,10 +1,10 @@
 {
   "name": "Send to Google Sheet",
   "description": "Save links to Google Sheets with one click",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "manifest_version": 3,
   "oauth2": {
-    "client_id": "89072064359-1k63rd50meu0do5tkloj3tq48hjdil18.apps.googleusercontent.com",
+    "client_id": "89072064359-nc7foj9vpt4p4ghdehu6p2tc98j4tl2l.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/spreadsheets"]
   },
   "permissions": [
